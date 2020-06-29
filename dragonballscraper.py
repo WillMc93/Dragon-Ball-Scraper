@@ -1,8 +1,5 @@
 from bs4 import BeautifulSoup
-from requests import HTTPError
-
 import requests
-
 import shutil
 import os
 import re
@@ -54,20 +51,21 @@ def scrape_images(volume_links, http_fails=None):
 			page = requests.get(pl, stream=True)				
 			
 			# get page number
-			page_num = re_page_num.search(pl).group(1)
+			try:
+				page_num = re_page_num.search(pl).group(1)
 			
-			if page.status_code == 200:
-				print(f"Writing {vl}, {page_num}")
+				if page.status_code == 200:
+					print(f"Writing {vl}, {page_num}")
 			
-				img_path = path + '/' + page_num + '.jpg'
-				with open(img_path, 'wb') as file:
-					page.raw.decode_content = True
-					shutil.copyfileobj(page.raw, file)
-					
-			else:
+					img_path = path + '/' + page_num + '.jpg'
+					with open(img_path, 'wb') as file:
+						page.raw.decode_content = True
+						shutil.copyfileobj(page.raw, file)
+						
+			except:
 				print(f"FAILED: {vl}, {pl}")
 				http_fails.append((vl, pl))
-						
+							
 	return http_fails
 		
 	
@@ -75,4 +73,4 @@ http_fails = scrape_images(volume_links)
 
 with open('fails.txt', 'w') as f:
 	for fail in http_fails:
-		f.write(fail + '\n')
+		f.write(f'({fail[0]}, {fail[1]})\n')
